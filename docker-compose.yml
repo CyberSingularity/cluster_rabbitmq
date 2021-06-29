@@ -1,0 +1,123 @@
+version: "3.9"  # optional since v1.27.0
+
+networks:
+  rmq:
+   name: rabbitmq_go_net
+   driver: bridge
+
+services:
+  master-1:
+    hostname: master-1
+    image: rabbitmq:management-alpine
+    container_name: master-1
+    environment:
+      - RABBITMQ_ERLANG_COOKIE="secret-asdas111"
+    volumes:
+      - ./config/rabbit-master-1/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    networks:
+        - rmq
+    ports:
+      - "5671"
+      - "5672"
+      - "5555:15672"
+      - "15692"
+      - "25672"
+      - "4369"
+
+  slave-1:
+    hostname: slave-1
+    environment:
+      - RABBITMQ_ERLANG_COOKIE="secret-asdas111"
+    volumes:
+      - ./config/rabbit-slave-1/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    image: rabbitmq:management-alpine
+    container_name: slave-1
+    networks:
+        - rmq
+    ports:
+      - "5671"
+      - "5672"
+      - "5557:15672"    
+      - "15692"
+      - "25672"
+      - "4369"
+
+  slave-2:  
+    hostname: slave-2
+    environment:
+      - RABBITMQ_ERLANG_COOKIE="secret-asdas111"
+    volumes:
+      - ./config/rabbit-slave-2/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    image: rabbitmq:management-alpine
+    container_name: slave-2
+    networks:
+        - rmq
+    ports:
+      - "5671"
+      - "5672"
+      - "5558:15672" 
+      - "15692"   
+      - "25672"
+      - "4369"
+
+  slave-3: 
+    hostname: slave-3
+    environment:
+      - RABBITMQ_ERLANG_COOKIE="secret-asdas111"
+    volumes:
+      - ./config/rabbit-slave-3/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    image: rabbitmq:management-alpine
+    container_name: slave-3
+    networks:
+        - rmq
+    ports:
+      - "5671"
+      - "5559:15672" 
+      - "15692"   
+      - "5672"
+      - "25672"
+      - "4369"
+
+  slave-4:
+    hostname: slave-4
+    environment:
+      - RABBITMQ_ERLANG_COOKIE="secret-asdas111"
+    volumes:
+      - ./config/rabbit-slave-4/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    image: rabbitmq:management-alpine
+    container_name: slave-4
+    networks:
+        - rmq
+    ports:
+      - "5671"
+      - "5672"
+      - "5556:15672"
+      - "15692"
+      - "25672"
+      - "4369"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention=200h'
+      - '--web.enable-lifecycle'
+    restart: always
+    expose:
+      - 9090
+    ports:
+      - "9090:9090"
+      - "15692"
+    networks:
+        - rmq
+
+
+volumes:
+    prometheus_data: {}
